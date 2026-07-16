@@ -159,7 +159,7 @@ Det skal sættes op én gang:
    | Felt | Værdi |
    |---|---|
    | PyPI Project Name | `modekjar` |
-   | Owner | `Zaptos27` |
+   | Owner | `mimodekjaer` |
    | Repository name | `functions_moedekjaer` |
    | Workflow name | `publish.yml` |
    | Environment name | `pypi` |

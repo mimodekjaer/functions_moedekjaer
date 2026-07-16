@@ -5,15 +5,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="modekjar", 
-    version="0.0.3",
+    version="1.0.0",
     author="Mikkel Møller Mødekjær",
     author_email="MikkelMM99@gmail.com",
     description="Just a small function package for numpy, sympy and iminuit",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Zaptos27/functions_moedekjaer.git",
+    url="https://github.com/mimodekjaer/functions_moedekjaer",
     project_urls={
-        "Bug Tracker": "https://github.com/Zaptos27/functions_moedekjaer.git/issues",
+        "Bug Tracker": "https://github.com/mimodekjaer/functions_moedekjaer/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
