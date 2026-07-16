@@ -1,11 +1,8 @@
+# Kun det, der skal bruges for at BYGGE pakken. Kørsels-afhængighederne
+# (numpy, matplotlib, sympy, iminuit) står i setup.py under install_requires.
 [build-system]
 requires = [
     "setuptools>=42",
-    "wheel",
-    "numpy",
-    "sympy",
-    "matplotlib",
-    "seaborn",
-    "iminuit"
+    "wheel"
 ]
 build-backend = "setuptools.build_meta"

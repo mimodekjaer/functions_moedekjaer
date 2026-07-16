@@ -22,5 +22,14 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.6",
+    python_requires=">=3.9",
+    install_requires=[
+        "numpy>=1.22",
+        "matplotlib>=3.5",
+        "sympy",
+        "iminuit",
+    ],
+    extras_require={
+        "hurtig": ["numba>=0.57"],
+    },
 )

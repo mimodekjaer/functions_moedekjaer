@@ -1,0 +1,84 @@
+name: test
+
+on:
+  push:
+    branches: [python]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Uden numba skal ALT stadig virke — bare langsommere. Det er den vej,
+  # enhver bruger rammer, hvis de ikke installerer [hurtig], så den testes
+  # på hele det Python-interval, setup.py lover.
+  ren-python:
+    name: ren Python ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Installér uden numba
+        run: pip install -e .
+      - name: Selvtest (HAR_NUMBA er False her)
+        run: python tests/test_simulering.py
+
+  # Og den hurtige vej skal give de samme fysiske svar. Numba følger ikke
+  # hele intervallet ovenfor, så her holder vi os til de nyere versioner.
+  med-numba:
+    name: med numba ${{ matrix.python }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Installér med numba
+        run: pip install -e ".[hurtig]"
+      - name: Selvtest (numba aktiv)
+        run: python tests/test_simulering.py
+      - name: Fallback skal også virke, når numba ER installeret
+        run: SIMULERING_INGEN_NUMBA=1 python tests/test_simulering.py
+
+  # Kan pakken bygges, består den twines metadata-tjek, og kan den
+  # installeres og importeres i et miljø, hvor kildekoden IKKE ligger?
+  # (src-layout betyder, at en import kun kan lykkes via installationen.)
+  # Hjulet hedder modekjar og indeholder BEGGE pakker — derfor importeres
+  # de begge to her.
+  pakke:
+    name: byg og installér
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install build twine
+      - run: python -m build
+      - name: Metadata-tjek (det, twine ville afvise ved upload)
+        run: twine check --strict dist/*
+      - name: Installér hjulet rent og importér det
+        run: |
+          python -m venv /tmp/rent
+          /tmp/rent/bin/pip install --quiet dist/*.whl
+          cd /tmp
+          /tmp/rent/bin/python -c "
+          import modekjar
+          import unf_fysisk_simulering as u
+          from unf_fysisk_simulering import *
+          print('unf_fysisk_simulering:', u.__version__, '| HAR_NUMBA:', HAR_NUMBA)
+          t, x = simuler_differential(lambda t, x: -0.5 * x, 1.0, 5.0, 0.1)
+          assert abs(float(x[-1]) - 0.0821) < 1e-3, float(x[-1])
+          print('begge pakker importeret og kørt fra en ren installation')
+          "

@@ -1,0 +1,68 @@
+name: publish
+
+# Udgiver til PyPI, når du laver en GitHub Release. Sådan gør du:
+#
+#   1) sæt version i setup.py
+#   2) git tag v0.0.4 && git push --tags
+#   3) lav en Release på taggen i GitHub  ->  denne workflow kører
+#
+# Der er INGEN API-token involveret. Den bruger PyPI Trusted Publishing
+# (OIDC), som skal slås til én gang — se README'ets udviklingsafsnit.
+#
+# Bemærk: hjulet hedder "modekjar" og indeholder BEGGE pakker (modekjar og
+# unf_fysisk_simulering). unf_fysisk_simulering.__version__ er versionen på
+# den udgave, koden er hentet fra, og følger derfor IKKE modekjars version.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  byg:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check --strict dist/*
+
+      # En forkert version er ikke til at fortryde: PyPI tillader ikke, at man
+      # uploader det samme versionsnummer to gange. Så vi tjekker FØR upload,
+      # at taggen og setup.py siger det samme.
+      - name: Tag og version skal stemme overens
+        if: github.event_name == 'release'
+        run: |
+          import os, re, sys, pathlib
+          tag = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          setup = re.search(r'^\s*version\s*=\s*"([^"]+)"',
+                            pathlib.Path("setup.py").read_text(), re.M).group(1)
+          print(f"tag     : {tag}\nsetup.py: {setup}")
+          if tag != setup:
+              sys.exit("::error::tag og setup.py er ikke enige om versionen")
+        shell: python
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  udgiv:
+    needs: byg
+    runs-on: ubuntu-latest
+    # Miljøet giver dig et sted at kræve manuel godkendelse, hvis du vil
+    # (Settings -> Environments -> pypi -> Required reviewers).
+    environment:
+      name: pypi
+      url: https://pypi.org/p/modekjar
+    permissions:
+      id-token: write        # <- det er DENNE, Trusted Publishing bruger
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
