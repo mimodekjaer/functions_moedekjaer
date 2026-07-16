@@ -1,0 +1,8 @@
+# Byggeartefakter — genskabes af `python -m build`, og publish.yml uploader
+# ALT i dist/, så gamle hjul her ville ryge med op på PyPI.
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+.venv/

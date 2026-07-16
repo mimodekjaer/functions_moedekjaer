@@ -1,7 +1,0 @@
-numpy>=1.22
-matplotlib>=3.5
-sympy
-iminuit
-
-[hurtig]
-numba>=0.57
